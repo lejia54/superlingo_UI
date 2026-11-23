@@ -5,7 +5,9 @@ import type { ApiResponse } from './types'
  * @param barcode 条形码字符串
  */
 export async function fetchProductByBarcode(barcode: string): Promise<ApiResponse> {
-  const url = `https://superlingo.onrender.com/api/v1/scan/${encodeURIComponent(barcode)}`
+  // 使用你提供的真实后端线上接口地址
+  const url = `https://superlingo-server.onrender.com/api/v1/scan/${encodeURIComponent(barcode)}`
+  
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -19,7 +21,7 @@ export async function fetchProductByBarcode(barcode: string): Promise<ApiRespons
     console.error('Fetch product error:', error)
     return {
       code: 500,
-      message: '网络请求失败，请稍后重试'
+      message: '网络请求失败，请检查网络或稍后重试'
     }
   }
 }
