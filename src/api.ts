@@ -1,12 +1,7 @@
 import type { ApiResponse } from './types'
 
-/**
- * 根据条形码查询商品信息
- * @param barcode 条形码字符串
- */
 export async function fetchProductByBarcode(barcode: string): Promise<ApiResponse> {
-  // 使用你提供的真实后端线上接口地址
-  const url = `https://superlingo-server.onrender.com/api/v1/scan/${barcode}`
+  const url = `https://superlingo-server.onrender.com/api/v1/scan/${encodeURIComponent(barcode)}`
   
   try {
     const response = await fetch(url, {
@@ -15,8 +10,41 @@ export async function fetchProductByBarcode(barcode: string): Promise<ApiRespons
         'Accept': 'application/json'
       }
     })
+
+    if (response.status === 404) {
+      return {
+        code: 404,
+        message: '未找到商品信息'
+      }
+    }
+
+    if (!response.ok) {
+      return {
+        code: response.status,
+        message: '服务器响应异常'
+      }
+    }
+
     const result = await response.json()
-    return result
+
+    // 兼容你后端实际返回的 {"product": {...}} 格式
+    if (result && result.product) {
+      return {
+        code: 200,
+        message: 'success',
+        data: result.product
+      }
+    }
+
+    // 兼容万一后端某些情况返回 {"code": 200, "data": {...}}
+    if (result && result.code === 200 && result.data) {
+      return result
+    }
+
+    return {
+      code: 404,
+      message: '未找到商品信息'
+    }
   } catch (error) {
     console.error('Fetch product error:', error)
     return {

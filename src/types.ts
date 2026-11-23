@@ -6,11 +6,11 @@ export interface Product {
   source?: string;
   quantity?: string;
   brands?: string;
-  categories?: string;
-  countries?: string;
+  categoriesTags?: string; // 对应你返回的 categoriesTags
+  countriesTags?: string;  // 对应你返回的 countriesTags
   origins?: string;
   ingredients?: string;
-  novaGroup?: number; // 1-4
+  novaGroup?: number;      // 0 或 1-4
 }
 
 export interface ApiResponse {

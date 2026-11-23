@@ -2,7 +2,7 @@
   <div class="detail-container">
     <!-- 上半部分：核心商品信息卡片 -->
     <div class="card core-card">
-      <div class="card-tip">
+      <div class="card-tip" v-if="novaInfo">
         说明：加工程度按 1 至 4 级递增，1为未加工，2为加工过的烹饪原料，3为加工食品，4为超加工食品。
       </div>
 
@@ -49,7 +49,6 @@
               v-for="(item, index) in parsedIngredients" 
               :key="index"
             >
-              <!-- 绝对定位百分比进度条背景 -->
               <div 
                 class="progress-bg" 
                 v-if="item.hasPercent" 
@@ -90,9 +89,9 @@
         </van-tab>
 
         <!-- 可出售国家 -->
-        <van-tab title="可售国家" v-if="product.countries">
+        <van-tab title="可售国家" v-if="cleanCountries">
           <div class="tab-content-padded plain-text">
-            {{ product.countries }}
+            {{ cleanCountries }}
           </div>
         </van-tab>
       </van-tabs>
@@ -126,13 +125,19 @@ defineEmits<{
 
 const activeTab = ref(0)
 
-// 清洗品牌名称（去除“品牌”二字）
+// 辅助工具：去掉字符串首尾的 [ 和 ]
+const stripBrackets = (str?: string) => {
+  if (!str) return ''
+  return str.replace(/^\[|\]$/g, '').trim()
+}
+
+// 清洗品牌名称
 const cleanBrand = computed(() => {
   if (!props.product.brands) return ''
   return props.product.brands.replace(/品牌/g, '').trim()
 })
 
-// 加工程度动态样式与文案
+// 加工程度动态样式与文案（当 novaGroup 为 0 或空时返回 null 自动隐藏）
 const novaInfo = computed(() => {
   const group = props.product.novaGroup
   switch (group) {
@@ -149,10 +154,12 @@ const novaInfo = computed(() => {
   }
 })
 
-// 解析成分列表并利用正则提取百分比
+// 解析成分列表（去掉首尾 [] 后按逗号拆分）
 const parsedIngredients = computed(() => {
-  if (!props.product.ingredients) return []
-  const rawList = props.product.ingredients.split(/[,;，；]/).map(s => s.trim()).filter(Boolean)
+  const cleaned = stripBrackets(props.product.ingredients)
+  if (!cleaned) return []
+  
+  const rawList = cleaned.split(/[,;，；]/).map(s => s.trim()).filter(Boolean)
   const regex = /(\d+(?:\.\d+)?%)/
 
   return rawList.map(item => {
@@ -170,10 +177,16 @@ const parsedIngredients = computed(() => {
   })
 })
 
-// 解析所属类别
+// 解析所属类别（读取 categoriesTags 并去掉首尾 []）
 const parsedCategories = computed(() => {
-  if (!props.product.categories) return []
-  return props.product.categories.split(/[,，]/).map(s => s.trim()).filter(Boolean)
+  const cleaned = stripBrackets(props.product.categoriesTags)
+  if (!cleaned) return []
+  return cleaned.split(/[,，]/).map(s => s.trim()).filter(Boolean)
+})
+
+// 解析可售国家（读取 countriesTags 并去掉首尾 []）
+const cleanCountries = computed(() => {
+  return stripBrackets(props.product.countriesTags)
 })
 
 const categoryColors = [
@@ -184,13 +197,12 @@ const categoryColors = [
   { bg: '#f3e5f5', color: '#7b1fa2' }
 ]
 
-// 检查是否有任何 Tab 内容可展示
 const hasAnyTabContent = computed(() => {
   return (
     parsedIngredients.value.length > 0 ||
     !!props.product.origins ||
     parsedCategories.value.length > 0 ||
-    !!props.product.countries
+    !!cleanCountries.value
   )
 })
 </script>
@@ -259,7 +271,7 @@ const hasAnyTabContent = computed(() => {
         }
 
         .product-name-zh {
-          font-size: 14px;
+          font-size: 15px;
           font-weight: 600;
           color: #2d3436;
           overflow: hidden;
@@ -268,7 +280,7 @@ const hasAnyTabContent = computed(() => {
         }
 
         .product-name-en {
-          font-size: 12px;
+          font-size: 13px;
           color: #636e72;
           overflow: hidden;
           text-overflow: ellipsis;
