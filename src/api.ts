@@ -6,7 +6,7 @@ import type { ApiResponse } from './types'
  */
 export async function fetchProductByBarcode(barcode: string): Promise<ApiResponse> {
   // 使用你提供的真实后端线上接口地址
-  const url = `https://superlingo-server.onrender.com/api/v1/scan/${encodeURIComponent(barcode)}`
+  const url = `https://superlingo-server.onrender.com/api/v1/scan/${barcode}`
   
   try {
     const response = await fetch(url, {
